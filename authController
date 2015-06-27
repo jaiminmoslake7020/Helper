@@ -1,0 +1,183 @@
+<?php
+namespace backend\controllers;
+
+use backend\models\Cities;
+use Yii;
+use backend\controllers\InheritedMainController;
+use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
+use yii\console\Controller;
+use backend\components\Helper;
+use yii\helpers\ArrayHelper;
+use common\models\User;
+
+
+/**
+ * CitiesController implements the CRUD actions for Cities model.
+ */
+class authController extends InheritedMainController
+{
+
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['post'],
+                ],
+            ],
+
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['index'],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index','init','assign-permission','assign-role-to-user'],
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+
+
+        ];
+    }
+
+
+    public function actionIndex()
+    {
+        $auth = Yii::$app->authManager;
+
+        if(isset($_POST['post']))
+        {
+
+            $type = $_POST['post']['type'];
+            $name = $_POST['post']['name'];
+
+            if($type == 1)
+            {
+                $role = $auth->createRole($name);
+                $auth->add($role);
+
+                Yii::$app->session->setFlash('success','New Role "'.$name.'" has been created.');
+
+            }
+            else if ($type == 2)
+            {
+                $permission = $auth->createPermission($name);
+                $permission->description = $name;
+                $auth->add($permission);
+
+                Yii::$app->session->setFlash('success','New Role "'.$name.'" has been created.');
+
+            }
+
+        }
+
+        return $this->render('index');
+    }
+
+    public function actionAssignPermission()
+    {
+        $auth = Yii::$app->authManager;
+        $roles = $auth->getRoles();
+        $permissions = $auth->getPermissions();
+        $data = ArrayHelper::map( $roles , 'name', 'name');
+        //Helper::printR($permissions);
+        //exit;
+
+        if(isset($_POST['post']))
+        {
+            //Helper::printR($_POST);
+            $post = $_POST['post'];
+
+            foreach($post as $k=>$val){
+
+                foreach ($val as $k1 => $val1){
+
+                $role = $auth->getRole($k);
+                $permission = $auth->getPermission($k1);
+
+                if($role !== null  && $permission !== null)
+                {
+                    $auth->addChild($role, $permission);
+                }
+
+               }
+            }
+
+
+            Yii::$app->session->setFlash('success','Succefully permissions assigned to roles.');
+
+
+        }
+
+        return $this->render('assign-permission', ['permissions'=>$permissions, 'roles'=>$roles]);
+    }
+
+    public function actionAssignRoleToUser()
+    {
+        $users = User::findAll(['status'=>1]);
+        $auth = Yii::$app->authManager;
+        $roles = $auth->getRoles();
+
+        $usersDropDown = ArrayHelper::map($users , 'user_id', 'username');
+        $rolesDropDown = ArrayHelper::map($roles , 'name', 'name');
+        //Helper::printR($rolesDropDown);
+
+
+        if(isset($_POST['post']))
+        {
+            $post = $_POST['post'];
+            $userId = $post['user'];
+            $role = $post['role'];
+
+            $role = $auth->getRole($role);
+
+            if($role !== null)
+            {
+                $auth->assign($role, $userId);
+                Yii::$app->session->setFlash('success','Succefully role assigned to user.');
+            }
+        }
+
+        return $this->render('roleAssignment',['usersDropDown'=>$usersDropDown,'rolesDropDown'=>$rolesDropDown]);
+    }
+
+    public function actionInit()
+    {
+        $auth = Yii::$app->authManager;
+
+        // add "createPost" permission
+        $createPost = $auth->createPermission('createPost');
+        $createPost->description = 'Create a post';
+        $auth->add($createPost);
+
+        // add "updatePost" permission
+        $updatePost = $auth->createPermission('updatePost');
+        $updatePost->description = 'Update post';
+        $auth->add($updatePost);
+
+        // add "author" role and give this role the "createPost" permission
+        $author = $auth->createRole('author');
+        $auth->add($author);
+        $auth->addChild($author, $createPost);
+
+        // add "admin" role and give this role the "updatePost" permission
+        // as well as the permissions of the "author" role
+        $admin = $auth->createRole('admin');
+        $auth->add($admin);
+        $auth->addChild($admin, $updatePost);
+        $auth->addChild($admin, $author);
+
+        // Assign roles to users. 1 and 2 are IDs returned by IdentityInterface::getId()
+        // usually implemented in your User model.
+        //$auth->assign($author, 2);
+        $auth->assign($admin, 1);
+    }
+
+
+
+}
+
