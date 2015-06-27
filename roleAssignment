@@ -1,0 +1,39 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
+use backend\models\WebsiteMovies;
+use backend\models\Standard;
+use yii\helpers\BaseHtml;
+use yii\db\Query;
+use yii\web\View;
+
+
+/* @var $this yii\web\View */
+/* @var $model app\models\Websites */
+/* @var $form yii\widgets\ActiveForm */
+
+?>
+
+<div class="websites-form">
+
+    <?php $form = ActiveForm::begin(); ?>
+
+    <div class="form-group">
+        <label class="control-label">User</label>
+        <?= BaseHtml::dropDownList('post[user]','',$usersDropDown,array('class'=>'form-control')); ?>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Role</label>
+        <?= BaseHtml::dropDownList('post[role]','', $rolesDropDown,array('class'=>'form-control')); ?>
+    </div>
+
+    <div class="form-group">
+        <?= Html::submitButton( 'Create' , ['class' => 'btn btn-success']) ?>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+</div>
