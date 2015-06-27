@@ -1,0 +1,60 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
+use backend\models\WebsiteMovies;
+use backend\models\Standard;
+use yii\helpers\BaseHtml;
+use yii\db\Query;
+use yii\web\View;
+
+
+/* @var $this yii\web\View */
+/* @var $model \Websites */
+/* @var $form yii\widgets\ActiveForm */
+
+?>
+
+<div class="websites-form">
+
+    <?php $form = ActiveForm::begin(); ?>
+
+    <?php
+
+        foreach($roles as $k=>$val)
+        {
+             ?>
+             <p><?= $k; ?></p>
+
+            <div class="btn-group" data-toggle="buttons">
+
+                <?php
+
+                foreach($permissions as $k1=>$val1)
+                {
+                    ?>
+                    <label class="btn btn-primary">
+                        <input type="checkbox" autocomplete="off"  name="post[<?= $k; ?>][<?= $k1; ?>]" > <?= $k1; ?>
+                    </label>
+                <?php
+                }
+
+                 ?>
+
+            </div>
+            <br/>
+            <br/>
+
+             <?php
+        }
+
+    ?>
+    <br/>
+    <div class="form-group">
+        <?= Html::submitButton( 'Create' , ['class' => 'btn btn-success']) ?>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+</div>
